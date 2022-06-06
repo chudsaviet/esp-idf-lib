@@ -21,6 +21,7 @@
  *
  * Holtek HT16K33 LED Controller driver.
  * No keyscan features implemented.
+ * Tip: PWM brightness frequency depends on I2C clock.
  *
  * Manufacturer link: https://www.holtek.com/productdetail/-/vg/HT16K33
  * Datasheet: https://www.holtek.com/documents/10179/116711/HT16K33v120.pdf
@@ -51,7 +52,7 @@ extern "C" {
 #include <i2cdev.h>
 
 /**
- * @brief Initialize HT16K33 device descriptor
+ * @brief Initialize HT16K33 device.
  *
  * @param dev output I2C device descriptor
  * @param port I2C port
@@ -61,7 +62,7 @@ extern "C" {
  * @param addr device I2C address
  * @return ESP_OK in case of success
  */
-esp_err_t ht16k33_init_desc(i2c_dev_t *dev, i2c_port_t port, uint32_t i2c_freq_hz,
+esp_err_t ht16k33_init(i2c_dev_t *dev, i2c_port_t port, uint32_t i2c_freq_hz,
  gpio_num_t sda_gpio, gpio_num_t scl_gpio, uint8_t addr);
 
 /**

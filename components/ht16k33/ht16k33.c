@@ -32,6 +32,7 @@ static const char* TAG = "ht16k33";
 #define HT16K33_CMD_SYSTEM_SETUP 0b0010
 #define HT16K33_CMD_SET_BRIGHTNESS 0b1110
 #define HT16K33_CMD_DISPLAY_SETUP 0b1000
+#define HT16K33_CMD_ROW_INT_SET 0b1010
 
 #define HT16K33_RAM_SIZE_BYTES 16
 
@@ -76,17 +77,23 @@ esp_err_t ht16k33_init(i2c_dev_t *dev, i2c_port_t port, uint32_t i2c_freq_hz,
         TAG,
         "Can't start oscillator.");
 
-    // Set display off, no blinking.
+    // Set to ROW output.
     ESP_RETURN_ON_ERROR(
-        ht16k33_display_setup(dev, 0, HT16K33_BLINKING_0HZ),
+        send_short_cmd(dev, HT16K33_CMD_ROW_INT_SET << 4 | 0b0000),
         TAG,
-        "Can't set display off, no blinking.");
+        "Can't set to ROW output");
 
     // Set half brightness.
     ESP_RETURN_ON_ERROR(
         ht16k33_set_brightness(dev, HT16K33_MAX_BRIGHTNESS / 2),
         TAG,
         "Can't set initial brightness.");
+
+    // Set display off, no blinking.
+    ESP_RETURN_ON_ERROR(
+        ht16k33_display_setup(dev, 0, HT16K33_BLINKING_0HZ),
+        TAG,
+        "Can't set display off, no blinking.");
 
     // RAM initializes with random values. Zero it.
     ESP_RETURN_ON_ERROR(zero_ram(dev), TAG, "Can't zero the RAM.");
@@ -115,7 +122,7 @@ esp_err_t ht16k33_set_brightness(i2c_dev_t *dev, uint8_t brightness) {
 
 esp_err_t ht16k33_display_setup(i2c_dev_t *dev, uint8_t on_flag, uint8_t blinking) {
     // on_flag is 1 bit.
-    if (on_flag > 1) {
+    if (on_flag > 0b1) {
         ESP_LOGE(TAG, "on_flag can only be 0 or 1.");
         return ESP_ERR_INVALID_ARG;
     }

@@ -1,5 +1,5 @@
 #V := 1
-PROJECT_NAME := ht16k33_example
+PROJECT_NAME := example_ht16k33
 
 EXTRA_COMPONENT_DIRS := $(CURDIR)/../../components
 

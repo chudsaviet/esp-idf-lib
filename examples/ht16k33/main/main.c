@@ -13,6 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+#include <memory.h>
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -25,6 +26,19 @@ static char *tag = "main";
 void app_main()
 {
     ESP_LOGI(tag, "HT16K33 example");
+
+    i2c_dev_t dev;
+    memset(&dev, 0, sizeof(i2c_dev_t));
+
+    ht16k33_init(
+        &dev,
+        0,
+        CONFIG_EXAMPLE_I2C_FREQUENCY_HZ,
+        CONFIG_EXAMPLE_I2C_MASTER_SDA,
+        CONFIG_EXAMPLE_I2C_MASTER_SCL,
+        HT16K33_DEFAULT_ADDR
+    );
+
     while (1)
     {
         vTaskDelay(pdMS_TO_TICKS(1000));
