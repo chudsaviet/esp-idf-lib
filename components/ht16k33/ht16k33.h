@@ -39,6 +39,7 @@ extern "C" {
 #define HT16K33_DEFAULT_ADDR 0x70
 #define HT16K33_DEFAULT_I2C_FREQ_HZ 400000 // 400kHz
 #define HT16K33_MAX_BRIGHTNESS 15
+#define HT16K33_RAM_SIZE_BYTES 16
 
 // Display blinking frequencies.
 #define HT16K33_BLINKING_0HZ 0b00
@@ -66,7 +67,7 @@ esp_err_t ht16k33_init(i2c_dev_t *dev, i2c_port_t port, uint32_t i2c_freq_hz,
  gpio_num_t sda_gpio, gpio_num_t scl_gpio, uint8_t addr);
 
 /**
- * @brief Free device descriptor
+ * @brief Free device descriptor.
  *
  * @param dev I2C device descriptor
  * @return ESP_OK to indicate success
@@ -74,7 +75,7 @@ esp_err_t ht16k33_init(i2c_dev_t *dev, i2c_port_t port, uint32_t i2c_freq_hz,
 esp_err_t ht16k33_free_desc(i2c_dev_t *dev);
 
 /**
- * @brief Set brightness.
+ * @brief Set brightness. Thread safe.
  *
  * @param dev I2C device descriptor
  * @param brightness Brighness value in 0-15 range.
@@ -83,7 +84,7 @@ esp_err_t ht16k33_free_desc(i2c_dev_t *dev);
 esp_err_t ht16k33_set_brightness(i2c_dev_t *dev, uint8_t brightness);
 
 /**
- * @brief Display setup. ON/OFF and blinkng frequency.
+ * @brief Display setup. ON/OFF and blinkng frequency. Thread safe.
  *
  * @param dev I2C device descriptor
  * @param on_flag On flag, 0 or 1.
@@ -91,6 +92,14 @@ esp_err_t ht16k33_set_brightness(i2c_dev_t *dev, uint8_t brightness);
  * @return ESP_OK to indicate success
  */
 esp_err_t ht16k33_display_setup(i2c_dev_t *dev, uint8_t on_flag, uint8_t blinking);
+
+/**
+ * @brief Write whole HT16K33_RAM_SIZE_BYTES into RAM. Thread safe.
+ *
+ * @param data Bytes to write.
+ * @return ESP_OK to indicate success
+ */
+esp_err_t ht16k33_ram_write(i2c_dev_t *dev, uint8_t *data);
 
 #ifdef __cplusplus
 }

@@ -19,6 +19,8 @@
 #include <freertos/task.h>
 
 #include <esp_log.h>
+
+#include <i2cdev.h>
 #include <ht16k33.h>
 
 static char *tag = "main";
@@ -27,9 +29,12 @@ void app_main()
 {
     ESP_LOGI(tag, "HT16K33 example");
 
+    i2cdev_init();
+
     i2c_dev_t dev;
     memset(&dev, 0, sizeof(i2c_dev_t));
 
+    ESP_LOGI(tag, "Initializing the device.");
     ht16k33_init(
         &dev,
         0,
@@ -39,8 +44,36 @@ void app_main()
         HT16K33_DEFAULT_ADDR
     );
 
+    ESP_LOGI(tag, "Setting all on.");
+
+    uint8_t all_on[HT16K33_RAM_SIZE_BYTES];
+    memset(all_on, 0xFF, HT16K33_RAM_SIZE_BYTES);
+    uint8_t all_off[HT16K33_RAM_SIZE_BYTES];
+    memset(all_off, 0x00, HT16K33_RAM_SIZE_BYTES);
+
+    ESP_LOGI(tag, "Turning display on.");
+    ht16k33_display_setup(&dev, 1, HT16K33_BLINKING_0HZ);
+
     while (1)
     {
+        ESP_LOGI(tag, "Snake");
+        uint8_t snake_ram[HT16K33_RAM_SIZE_BYTES];
+        memset(snake_ram, 0, HT16K33_RAM_SIZE_BYTES);
+        for(int bit=0;bit < HT16K33_RAM_SIZE_BYTES * 8;bit++) {
+            int byte = bit / 8;
+            snake_ram[byte] = snake_ram[byte] | 1 << bit % 8;
+            ht16k33_ram_write(&dev, snake_ram);
+            vTaskDelay(pdMS_TO_TICKS(100));
+        }
         vTaskDelay(pdMS_TO_TICKS(1000));
+
+        for(int i=0; i<2; i++) {
+            ESP_LOGI(tag, "OFF");
+            ht16k33_ram_write(&dev, all_off);
+            vTaskDelay(pdMS_TO_TICKS(1000));
+            ESP_LOGI(tag, "ON");
+            ht16k33_ram_write(&dev, all_on);
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
     }
 }

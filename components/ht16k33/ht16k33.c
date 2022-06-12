@@ -28,26 +28,19 @@ static const char* TAG = "ht16k33";
 // All commands are one byte long.
 // First 4 bits are command type.
 // Last 4 bits are parameters.
-#define HT16K33_CMD_RAM_SET_POINTER 0b0100
+#define HT16K33_CMD_RAM_SET_POINTER 0b0000
 #define HT16K33_CMD_SYSTEM_SETUP 0b0010
 #define HT16K33_CMD_SET_BRIGHTNESS 0b1110
 #define HT16K33_CMD_DISPLAY_SETUP 0b1000
 #define HT16K33_CMD_ROW_INT_SET 0b1010
 
-#define HT16K33_RAM_SIZE_BYTES 16
+#define HT16K33_SET_RAM_CMD_SIZE_BYTES HT16K33_RAM_SIZE_BYTES + 1
 
 esp_err_t zero_ram(i2c_dev_t *dev) {
-    // First byte is pointer set command.
-    // Other bytes are the RAM values, which are zero.
-    uint8_t cmd_seq[HT16K33_RAM_SIZE_BYTES + 1] = {0};
-    cmd_seq[0] = HT16K33_CMD_RAM_SET_POINTER << 4 | 0b0000;
+    uint8_t all_zeros[HT16K33_RAM_SIZE_BYTES];
+    memset(all_zeros, 0, HT16K33_RAM_SIZE_BYTES);
 
-    // Send whole command sequence at once.
-    I2C_DEV_TAKE_MUTEX(dev);
-    I2C_DEV_CHECK(dev, i2c_dev_write(dev, NULL, 0, cmd_seq, sizeof(cmd_seq)));
-    I2C_DEV_GIVE_MUTEX(dev);
-
-    return ESP_OK;
+    return ht16k33_ram_write(dev, all_zeros);
 }
 
 // Send one-byte command.
@@ -85,7 +78,7 @@ esp_err_t ht16k33_init(i2c_dev_t *dev, i2c_port_t port, uint32_t i2c_freq_hz,
 
     // Set half brightness.
     ESP_RETURN_ON_ERROR(
-        ht16k33_set_brightness(dev, HT16K33_MAX_BRIGHTNESS / 2),
+        ht16k33_set_brightness(dev, HT16K33_MAX_BRIGHTNESS / 2 ),
         TAG,
         "Can't set initial brightness.");
 
@@ -134,9 +127,25 @@ esp_err_t ht16k33_display_setup(i2c_dev_t *dev, uint8_t on_flag, uint8_t blinkin
     }
 
     ESP_RETURN_ON_ERROR(
-        send_short_cmd(dev, HT16K33_CMD_DISPLAY_SETUP << 4 | on_flag << 2 | blinking),
+        send_short_cmd(dev, HT16K33_CMD_DISPLAY_SETUP << 4 | blinking << 1 | on_flag),
         TAG,
         "Can't do display setup.");
+
+    return ESP_OK;
+}
+
+esp_err_t ht16k33_ram_write(i2c_dev_t *dev, uint8_t *data) {
+    // First byte is pointer set command.
+    // Other bytes are the RAM values.
+    uint8_t cmd_seq[HT16K33_SET_RAM_CMD_SIZE_BYTES];
+    // Set write pointer to position 0x00.
+    cmd_seq[0] = HT16K33_CMD_RAM_SET_POINTER << 4 | 0b0000;
+    memcpy(cmd_seq + 1, data, HT16K33_RAM_SIZE_BYTES);
+
+    // Send whole command sequence at once.
+    I2C_DEV_TAKE_MUTEX(dev);
+    I2C_DEV_CHECK(dev, i2c_dev_write(dev, NULL, 0, cmd_seq, HT16K33_SET_RAM_CMD_SIZE_BYTES));
+    I2C_DEV_GIVE_MUTEX(dev);
 
     return ESP_OK;
 }
