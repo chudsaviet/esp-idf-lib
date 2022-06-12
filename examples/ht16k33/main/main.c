@@ -34,28 +34,26 @@ void app_main()
     i2c_dev_t dev;
     memset(&dev, 0, sizeof(i2c_dev_t));
 
-    ESP_LOGI(tag, "Initializing the device.");
-    ht16k33_init(
-        &dev,
-        0,
-        CONFIG_EXAMPLE_I2C_FREQUENCY_HZ,
-        CONFIG_EXAMPLE_I2C_MASTER_SDA,
-        CONFIG_EXAMPLE_I2C_MASTER_SCL,
-        HT16K33_DEFAULT_ADDR
-    );
-
-    ESP_LOGI(tag, "Setting all on.");
-
     uint8_t all_on[HT16K33_RAM_SIZE_BYTES];
     memset(all_on, 0xFF, HT16K33_RAM_SIZE_BYTES);
     uint8_t all_off[HT16K33_RAM_SIZE_BYTES];
     memset(all_off, 0x00, HT16K33_RAM_SIZE_BYTES);
 
-    ESP_LOGI(tag, "Turning display on.");
-    ht16k33_display_setup(&dev, 1, HT16K33_BLINKING_0HZ);
-
     while (1)
     {
+        ESP_LOGI(tag, "Initializing the device.");
+        ht16k33_init(
+            &dev,
+            0,
+            CONFIG_EXAMPLE_I2C_FREQUENCY_HZ,
+            CONFIG_EXAMPLE_I2C_MASTER_SDA,
+            CONFIG_EXAMPLE_I2C_MASTER_SCL,
+            HT16K33_DEFAULT_ADDR
+        );
+
+        ESP_LOGI(tag, "Turning display on.");
+        ht16k33_display_setup(&dev, 1, HT16K33_BLINKING_0HZ);
+
         ESP_LOGI(tag, "Snake");
         uint8_t snake_ram[HT16K33_RAM_SIZE_BYTES];
         memset(snake_ram, 0, HT16K33_RAM_SIZE_BYTES);
@@ -75,5 +73,9 @@ void app_main()
             ht16k33_ram_write(&dev, all_on);
             vTaskDelay(pdMS_TO_TICKS(1000));
         }
+
+        ESP_LOGI(tag, "Freeing device descriptor.");
+        ht16k33_free_desc(&dev);
+        memset(&dev, 0, sizeof(i2c_dev_t));
     }
 }
