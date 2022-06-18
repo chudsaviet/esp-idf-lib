@@ -82,7 +82,7 @@ esp_err_t zero_ram(i2c_dev_t *dev)
 // Send one-byte command.
 esp_err_t send_short_cmd(i2c_dev_t *dev, uint8_t cmd)
 {
-  CHECK_ARG(dev)
+  CHECK_ARG(dev);
 
   I2C_DEV_TAKE_MUTEX(dev);
   I2C_DEV_CHECK(dev, i2c_dev_write(dev, NULL, 0, &cmd, sizeof(uint8_t)));
@@ -95,6 +95,8 @@ esp_err_t ht16k33_init_desc(i2c_dev_t *dev, i2c_port_t port,
                             gpio_num_t sda_gpio, gpio_num_t scl_gpio,
                             uint8_t addr)
 {
+  CHECK_ARG(dev);
+
   memset(dev, 0, sizeof(i2c_dev_t));
   dev->port = port;
   dev->addr = addr;
@@ -109,6 +111,8 @@ esp_err_t ht16k33_init_desc(i2c_dev_t *dev, i2c_port_t port,
 
 esp_err_t ht16k33_init(i2c_dev_t *dev)
 {
+  CHECK_ARG(dev);
+
   // Enable system oscillator.
   ESP_RETURN_ON_ERROR(
       send_short_cmd(dev, HT16K33_CMD_SYSTEM_SETUP << 4 | 0b0001), TAG,
@@ -135,11 +139,15 @@ esp_err_t ht16k33_init(i2c_dev_t *dev)
 
 esp_err_t ht16k33_free_desc(i2c_dev_t *dev)
 {
+  CHECK_ARG(dev);
+
   return i2c_dev_delete_mutex(dev);
 }
 
 esp_err_t ht16k33_set_brightness(i2c_dev_t *dev, uint8_t brightness)
 {
+  CHECK_ARG(dev);
+
   if (brightness > 15) {
     ESP_LOGE(TAG, "Brightness shall be set in range 0-15.");
     return ESP_ERR_INVALID_ARG;
@@ -155,6 +163,8 @@ esp_err_t ht16k33_set_brightness(i2c_dev_t *dev, uint8_t brightness)
 esp_err_t ht16k33_display_setup(i2c_dev_t *dev, uint8_t on_flag,
                                 ht16k33_blinking_freq_t blinking)
 {
+  CHECK_ARG(dev);
+
   // on_flag is 1 bit.
   if (on_flag > 0b1) {
     ESP_LOGE(TAG, "on_flag can only be 0 or 1.");
@@ -178,6 +188,8 @@ esp_err_t ht16k33_display_setup(i2c_dev_t *dev, uint8_t on_flag,
 
 esp_err_t ht16k33_ram_write(i2c_dev_t *dev, uint8_t *data)
 {
+  CHECK_ARG(dev);
+
   // First byte is pointer set command.
   // Other bytes are the RAM values.
   uint8_t cmd_seq[HT16K33_SET_RAM_CMD_SIZE_BYTES];
